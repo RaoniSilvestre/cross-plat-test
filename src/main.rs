@@ -19,7 +19,7 @@ fn main() {
     // corretamente.
     let _log_handle = log::init_logger(args.log_path.into());
 
-    info!("Serviço iniciado. Logando apenas no stdout.");
+    info!("Serviço iniciado");
 
     #[cfg(target_os = "linux")]
     linux::linux_setup();
