@@ -38,6 +38,11 @@ pub mod linux {
     }
 }
 
+/// Sei pouco sobre essa parte aqui, tirei muita coisa da documentação da lib `windows_service` e
+/// confiei no processo, mas não executei no windows pra ver se funciona.
+///
+/// O teste feito até então foi uma cross-compilation setando a arquitetura target no `cargo build`
+/// buildou direitinho kkkk
 #[cfg(target_os = "windows")]
 pub mod windows {
     use std::ffi::OsString;

@@ -40,6 +40,12 @@ pub fn init_logger(path: PathBuf) -> WorkerGuard {
     guard
 }
 
+/// Vibecoded total isso aqui, revisar pra entender melhor depois, mas basicamente cria um cara
+/// compatível com a lib mais poderosa de logging que eu já vi, a tracing, pra quando chamar por
+/// exemplo:
+///
+/// `info!("TARARA")` no windows, ele enviar tanto pro arquivo configurado, quanto pro report lá do
+/// Windows
 #[cfg(target_os = "windows")]
 mod win_event_log {
     use tracing::{Event, Subscriber};
@@ -114,11 +120,9 @@ mod win_event_log {
                 .chain(std::iter::once(0))
                 .collect();
 
-            // PCWSTR::from_raw é o jeito certo na 0.62
             let lpstrings = [windows::core::PCWSTR::from_raw(msg_utf16.as_ptr())];
 
             unsafe {
-                // CORREÇÃO 2: Ordem dos 8 argumentos
                 let _ = ReportEventW(
                     self.handle,      // 1. Handle
                     event_type,       // 2. Tipo
