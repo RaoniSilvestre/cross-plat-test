@@ -1,5 +1,4 @@
 use clap::Parser;
-use tracing::info;
 
 #[cfg(target_os = "linux")]
 use crate::setup::linux;
@@ -18,8 +17,6 @@ fn main() {
     // Não mexer, essa variável precisa se manter viva até o final do programa para logar
     // corretamente.
     let _log_handle = log::init_logger(args.log_path.into());
-
-    info!("Serviço iniciado");
 
     #[cfg(target_os = "linux")]
     linux::linux_setup();

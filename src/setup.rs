@@ -1,39 +1,48 @@
 #[cfg(target_os = "linux")]
 pub mod linux {
+    use tracing::instrument;
     pub use tracing::{error, info, warn};
 
+    #[instrument(name = "Linux")]
     pub fn linux_setup() {
         use sd_notify::{NotifyState, notify};
         use tokio::signal::unix::{SignalKind, signal};
 
-        let rt = tokio::runtime::Runtime::new().expect("Falha ao criar Runtime");
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .build()
+            .expect("Falha ao criar Runtime multithreaded");
 
         rt.block_on(async {
+            info!("Inicializando serviço");
             let service_handle = tokio::spawn(crate::service::run());
 
             if let Err(e) = notify(&[NotifyState::Ready]) {
                 error!("Aviso: Falha ao notificar systemd: {}", e);
             }
 
-            info!("Log de arquivo iniciado no linux!");
+            let Ok(mut sigterm) = signal(SignalKind::terminate()) else {
+                error!("Erro ao recuperar SIGTERM");
+                return;
+            };
 
-            let mut sigterm = signal(SignalKind::terminate()).unwrap();
-            let mut sigint = signal(SignalKind::interrupt()).unwrap();
+            let Ok(mut sigint) = signal(SignalKind::interrupt()) else {
+                error!("Erro ao recuperar SIGINT");
+                return;
+            };
 
             tokio::select! {
                 _ = service_handle => {
                     warn!("A lógica do serviço terminou sozinha.");
                 }
                 _ = sigterm.recv() => {
-                    info!("SIGTERM recebido. Encerrando graciosamente...");
+                    warn!("SIGTERM recebido. Encerrando graciosamente...");
                 }
                 _ = sigint.recv() => {
-                    info!("SIGINT (Ctrl+C) recebido. Encerrando...");
+                    warn!("SIGINT (Ctrl+C) recebido. Encerrando...");
                 }
             }
 
-            // Aqui você faria o cleanup: fechar DB, flush de logs, etc.
-            info!("Serviço parado.");
+            info!("Serviço finalizado.");
         });
     }
 }

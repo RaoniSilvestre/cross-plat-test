@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use tracing::level_filters::LevelFilter;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{fmt, prelude::*};
 
@@ -16,10 +17,12 @@ pub fn init_logger(path: PathBuf) -> WorkerGuard {
         .with_line_number(true)
         .with_file(true)
         .with_thread_names(true)
-        .with_ansi(false);
+        .with_ansi(false)
+        .with_filter(LevelFilter::DEBUG);
 
     #[cfg(target_os = "windows")]
-    let system_layer = win_event_log::WinLayer::new("MeuServico");
+    let system_layer =
+        win_event_log::WinLayer::new("MeuServico").with_filter(filter::LevelFilter::WARN);
 
     #[cfg(target_os = "linux")]
     let system_layer = tracing_subscriber::fmt::layer()
